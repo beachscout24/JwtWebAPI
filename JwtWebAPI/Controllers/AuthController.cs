@@ -25,7 +25,7 @@ namespace JwtWebAPI.Controllers
         [HttpPost("register")]
 		public async Task<ActionResult<User>> Register(UserDto request)
 		{
-			CreatePassowrdHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+			CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
 			user.Username = request.Username;
 			user.PasswordHash = passwordHash;
@@ -55,10 +55,11 @@ namespace JwtWebAPI.Controllers
 		private string CreateToken(User user)
 		{
 			List<Claim> claims = new List<Claim>() {
-				new Claim(ClaimTypes.Name, user.Username)
+				new Claim(ClaimTypes.Name, user.Username),
+				new Claim(ClaimTypes.Role, "Admin"),
 			};
 
-			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));
+			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AppSettings:Token"]));
 
 			var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
@@ -72,7 +73,7 @@ namespace JwtWebAPI.Controllers
 			return jwt;
 		}
 
-		private void CreatePassowrdHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+		private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
 		{
 			using (var hmac = new HMACSHA512())
 			{
